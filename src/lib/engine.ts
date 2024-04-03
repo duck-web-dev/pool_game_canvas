@@ -33,9 +33,9 @@ class PoolGameEngine {
 		this.height = canvas.height;
 
 		// Generate balls
-		let n = 3; // Size of initial grid, idk the rules
+		let n = 4; // Size of initial grid, idk the rules
 		let defaultRadius = 20;
-		let coords = calculateBallCoordinatesInGrid(n, defaultRadius*2, 5, this.width*(2/3), this.height/2);
+		let coords = calculateBallCoordinatesInGrid(n, defaultRadius*2, defaultRadius*1.5, this.width*(2/3), this.height/2);
 		this.balls = [];
 		for (let i in coords) {
 			let coord = coords[i];
@@ -44,7 +44,7 @@ class PoolGameEngine {
 				pos: coord,
 				vel: {x:0, y:0},
 				color: getRandomPoolBallColor(),
-				radius: defaultRadius
+				radius: defaultRadius * Math.max(0.5, Math.random()*1.5)
 			})
 		}
 		this.balls.push({
@@ -55,7 +55,7 @@ class PoolGameEngine {
 			},
 			vel: {x:0, y:0},
 			color: getRandomPoolBallColor(),
-			radius: defaultRadius
+			radius: defaultRadius*2
 		})
 	}
   

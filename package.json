@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "PORT=3000 BROWSER=none react-scripts start"
+    "start": "PORT=3000 BROWSER=none react-scripts start",
+    "build": "react-scripts build"
   },
   "keywords": [],
   "author": "",

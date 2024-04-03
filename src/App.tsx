@@ -60,7 +60,8 @@ const App: React.FC = (() => {
 
 	return (
 		<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: 'min-content', minWidth: 800}}>
-			<h1>Simple Billiards Demo</h1>
+			<h1>Simple Billiard Demo</h1>
+			<p style={{animation: '1s ease-in-out infinite gray-glow'}}>Click a ball to change color. Drag and release to give momentum.</p>
 			<div className="container" style={{width:800, height: 600}}>
 				<canvas 
 					ref={canvasRef}

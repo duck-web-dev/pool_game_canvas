@@ -8,16 +8,17 @@
 	flex-direction: column;
 	justify-content: start;
 	align-items: center;
-	background: rgba(255, 255, 255, 0.2);
+	background: rgba(66, 66, 66, 0.8);
+	border-radius: 3px;
 	z-index: 999999;
-	border: lightgrey 2px solid;
+	border: rgb(60, 65, 68) 2px solid;
 }
 
 .title {
 	width: 100%; text-align: center;
 	padding-top: 5px;
 	padding-bottom: 5px;
-	background: rgba(255, 255, 255, 0.317)
+	background: rgba(24, 26, 27, 0.32)
 }
 
 .body {
