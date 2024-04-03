@@ -1,9 +1,0 @@
-.popup {
-	position: absolute;
-	min-width: 250px; min-height: 200px;
-	width: fit-content; height: max-content;
-	top: 0; left: 0;
-	pointer-events: none;
-	background: rgba(255, 255, 255, 0.2);
-	z-index: 999999;
-}

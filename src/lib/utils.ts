@@ -1,4 +1,4 @@
-export function calculateBallCoordinatesInGrid(n: number, ballSize: number, margin: number, centerX: number, centerY: number): Coordinates[] {
+export function calculateBallCoordinatesInGrid(n: number, ballSize: number, margin: number, centerX: number, centerY: number): Array<Coordinates> {
     const coordinates: Array<Coordinates> = [];
 
     const startX = centerX - Math.floor(n / 2) * (ballSize + margin);

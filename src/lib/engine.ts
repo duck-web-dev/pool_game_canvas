@@ -17,9 +17,8 @@ class PoolGameEngine {
 	private oldTimeStamp: number;
 	private fps: number = 0;
 
-	private selectedBall: PoolBall | undefined;
-	private mouseDragStartPos: Coordinates | undefined;
-	private mouseDragCurPos: Coordinates | undefined;
+	public selectedBall: PoolBall | null = null;
+	private mouseDragCurPos: Coordinates | null = null;
 	private isMouseDragging: boolean = false;
   
 	constructor(canvas: HTMLCanvasElement) {
@@ -32,15 +31,16 @@ class PoolGameEngine {
 		this.oldTimeStamp = Date.now();		
 		this.width = canvas.width;
 		this.height = canvas.height;
-		
 
 		// Generate balls
 		let n = 3; // Size of initial grid, idk the rules
 		let defaultRadius = 20;
 		let coords = calculateBallCoordinatesInGrid(n, defaultRadius*2, 5, this.width*(2/3), this.height/2);
 		this.balls = [];
-		for (let coord of coords)	{
+		for (let i in coords) {
+			let coord = coords[i];
 			this.balls.push({
+				id: (i as unknown as number),  // fix later, idk whats wrong
 				pos: coord,
 				vel: {x:0, y:0},
 				color: getRandomPoolBallColor(),
@@ -48,6 +48,7 @@ class PoolGameEngine {
 			})
 		}
 		this.balls.push({
+			id: n*n,
 			pos: {
 				x: this.width*(1/5),
 				y: this.height/2
@@ -94,11 +95,11 @@ class PoolGameEngine {
 			this.ctx.fillStyle = ball.color;
 			this.ctx.closePath();
 			this.ctx.fill();
-
 			// this.ctx.font = "15px serif";
 			// this.ctx.fillStyle = ball.color;
 			// this.ctx.fillText(`vel ${ball.vel.x.toFixed(2)} ${ball.vel.y.toFixed(2)}`, ball.pos.x - 5, ball.pos.y - ball.radius - 5);
 			// this.ctx.fillText(`pos ${ball.pos.x.toFixed(2)} ${ball.pos.y.toFixed(2)}`, ball.pos.x - 5, ball.pos.y - ball.radius - 20);
+			// this.ctx.fillText(`id ${ball.id} color ${ball.color}`, ball.pos.x - 5, ball.pos.y - ball.radius - 20);
 		}
 
 		// Mouse drag arrow
@@ -164,7 +165,7 @@ class PoolGameEngine {
 	}
   
 	
-	public handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>, asClick: boolean): void {
+	public handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>, asClick: boolean): number | void {
 		const pos = getRelativeMouseCoordinates(e, this.canvas);
 		console.debug('Mouse down at:', pos);
 		for (let ball of this.balls) {
@@ -172,8 +173,10 @@ class PoolGameEngine {
 				this.selectedBall = ball;
 				if (asClick) {
 					console.log('Ball clicked:', ball);
+					return ball.id;
 				} else {
-					this.mouseDragStartPos = pos;
+					// this.mouseDragStartPos = 
+					this.mouseDragCurPos = pos; 
 					this.isMouseDragging = true;
 					console.log('Ball selected:', ball);
 				}
@@ -196,6 +199,17 @@ class PoolGameEngine {
 			ball.vel, mouseMoveVector
 		)
 		console.log('Mouse drag release vector:', mouseMoveVector)
+	}
+
+	public getBallColor(id: number): PoolBallColor | undefined {
+		return this.balls.filter(e => e.id == id).at(0)?.color;
+	}
+	public getBallPosition(id: number): Coordinates | undefined {
+		return this.balls.filter(e => e.id == id).at(0)?.pos;
+	}
+	public setBallColor(id: number, color: PoolBallColor): void {
+		let b = this.balls.filter(e => e.id == id).at(0);
+		if (b) b.color = color;
 	}
 }
 

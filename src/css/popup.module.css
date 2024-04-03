@@ -1,0 +1,34 @@
+.popup {
+	position: absolute;
+	min-width: 250px; min-height: 150px;
+	width: 250px; height: min-content;
+	top: 100px; left: calc(50% - 125px);
+	/* pointer-events: none; */
+	display: flex;
+	flex-direction: column;
+	justify-content: start;
+	align-items: center;
+	background: rgba(255, 255, 255, 0.2);
+	z-index: 999999;
+	border: lightgrey 2px solid;
+}
+
+.title {
+	width: 100%; text-align: center;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	background: rgba(255, 255, 255, 0.317)
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+	justify-content: center;
+	align-items: center;
+	flex-grow: 1;
+}
+
+.body button {
+	margin-top: 15px;
+}

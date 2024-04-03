@@ -6,6 +6,7 @@ declare module '*.css' {
 
 type PoolBallColor = 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'black' | 'white';
 interface PoolBall {
+	id: number;
 	pos: Coordinates;
 	vel: Vector;        // velocity
 	radius: number;
