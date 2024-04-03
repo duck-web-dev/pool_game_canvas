@@ -9,5 +9,6 @@
 	  "allowSyntheticDefaultImports": true,
 	  "skipLibCheck": true,
 	  "forceConsistentCasingInFileNames": true
-	}
+	},
+	"include": ["src", "global.d.ts"]
 }  
