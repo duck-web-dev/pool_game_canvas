@@ -1,6 +1,7 @@
 import React from 'react';
-import { calculateBallCoordinatesInGrid, getRandomPoolBallColor } from './utils';
-import { isPointInCircle } from './math';
+import { calculateBallCoordinatesInGrid, getRandomPoolBallColor, getRelativeMouseCoordinates } from './utils';
+import { sumVectors, circleVelocitiesAfterCollision, doCirclesCollide, isPointInCircle, resolveCirclesCollision, twoPointsToVector, resizeVector, scaleVector, distanceBetweenPoints } from './math';
+import { drawArrow } from './draw';
 
 
 class PoolGameEngine {
@@ -15,6 +16,11 @@ class PoolGameEngine {
 	private secondsPassed: number = 0;
 	private oldTimeStamp: number;
 	private fps: number = 0;
+
+	private selectedBall: PoolBall | undefined;
+	private mouseDragStartPos: Coordinates | undefined;
+	private mouseDragCurPos: Coordinates | undefined;
+	private isMouseDragging: boolean = false;
   
 	constructor(canvas: HTMLCanvasElement) {
 		// Basic initialization
@@ -41,6 +47,15 @@ class PoolGameEngine {
 				radius: defaultRadius
 			})
 		}
+		this.balls.push({
+			pos: {
+				x: this.width*(1/5),
+				y: this.height/2
+			},
+			vel: {x:0, y:0},
+			color: getRandomPoolBallColor(),
+			radius: defaultRadius
+		})
 	}
   
 	// Okay some logic to use React and canvas endless loop.
@@ -80,59 +95,107 @@ class PoolGameEngine {
 			this.ctx.closePath();
 			this.ctx.fill();
 
-			this.ctx.font = "15px serif";
-			this.ctx.fillStyle = ball.color;
-			this.ctx.fillText(`vel ${ball.vel.x} ${ball.vel.y}`, ball.pos.x- 5, ball.pos.y - ball.radius - 5);
+			// this.ctx.font = "15px serif";
+			// this.ctx.fillStyle = ball.color;
+			// this.ctx.fillText(`vel ${ball.vel.x.toFixed(2)} ${ball.vel.y.toFixed(2)}`, ball.pos.x - 5, ball.pos.y - ball.radius - 5);
+			// this.ctx.fillText(`pos ${ball.pos.x.toFixed(2)} ${ball.pos.y.toFixed(2)}`, ball.pos.x - 5, ball.pos.y - ball.radius - 20);
+		}
+
+		// Mouse drag arrow
+		if (this.isMouseDragging) {
+			let ball = (this.selectedBall as PoolBall);
+			let start = ball.pos;
+			let end = (this.mouseDragCurPos as Coordinates);
+			if (distanceBetweenPoints(start, end) > ball.radius) {
+				drawArrow(this.ctx, start, end, ball.color);
+			}
 		}
 
 		// Debug info
 		this.ctx.font = "10px serif";
 		this.ctx.fillStyle = 'white';
-		this.ctx.fillText(`${this.balls.length} Balls | Frame ${tickId} | Delta ${this.secondsPassed} | FPS ${this.fps}`, 0, 10);
+		this.ctx.fillText(
+			`${this.balls.length} Balls | Frame ${tickId} | Delta ${this.secondsPassed} | FPS ${this.fps}` + (this.isMouseDragging?' | Drag':''), 
+			0, 10);
 	}
   
 	
 	public tick(): void {
+		// Calclulate delta and fps
 		let t = Date.now();
 		this.secondsPassed = (t - this.oldTimeStamp) / 1000;
 	    this.oldTimeStamp = t;
 		this.fps = Math.round(1 / (this.secondsPassed));
 
 		for (let ball of this.balls) {
+			// Apply current velocity
 			ball.pos.x += ball.vel.x * this.secondsPassed;
 			ball.pos.y += ball.vel.y * this.secondsPassed;
 
-			if (ball.pos.x < 0 || ball.pos.x > this.width) {
+			// Detect edge collision and bounce
+			let energyLoss = 0.3;
+			if (ball.pos.x < ball.radius || ball.pos.x + ball.radius > this.width) {
 				ball.pos.x -= ball.vel.x * this.secondsPassed * 3;
-				console.log(ball.vel.x)
-				ball.vel.x *= -1;
-				console.log(ball.vel.x)
+				ball.vel.x *= -(1 - energyLoss);
 			}
-			if (ball.pos.y < 0 || ball.pos.y > this.height) {
+			if (ball.pos.y < ball.radius || ball.pos.y + ball.radius > this.height) {
 				ball.pos.y -= ball.vel.y  * this.secondsPassed * 3;
-				ball.vel.y *= -1;
+				ball.vel.y *= -(1 - energyLoss);
 			}
 
-			ball.vel.y -= ball.vel.y * 0.97 * this.secondsPassed;
-			ball.vel.x -= ball.vel.x * 0.97 * this.secondsPassed;
+			// Other balls collisions
+			for (let second_ball of this.balls) {
+				if (second_ball === ball) continue;
+				if (doCirclesCollide(ball.pos, second_ball.pos, ball.radius, second_ball.radius)) {
+					// Resolve collisions
+					[ball.pos, second_ball.pos] = resolveCirclesCollision(ball.pos, second_ball.pos, ball.radius, second_ball.radius);
+					// Get new velocities
+					[ball.vel, second_ball.vel] = circleVelocitiesAfterCollision(ball.pos, second_ball.pos, ball.vel, second_ball.vel);
+				}
+			}
+
+			// Friction
+			let frictionLoss = 0.01;
+			ball.vel.y -= ball.vel.y * (1 - frictionLoss) * this.secondsPassed;
+			ball.vel.x -= ball.vel.x * (1 - frictionLoss) * this.secondsPassed;
 			if (Math.abs(ball.vel.x) < 1) ball.vel.x = 0;
 			if (Math.abs(ball.vel.y) < 1) ball.vel.y = 0;
 		}
 	}
   
 	
-	public handleClick(e: React.MouseEvent<HTMLCanvasElement>): void {
-		const rect = this.canvas.getBoundingClientRect();
-		const x = e.clientX - rect.left;
-		const y = e.clientY - rect.top;
-		console.log('Click at:', x, y);
+	public handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>, asClick: boolean): void {
+		const pos = getRelativeMouseCoordinates(e, this.canvas);
+		console.debug('Mouse down at:', pos);
 		for (let ball of this.balls) {
-			if (isPointInCircle({x,y}, ball.pos, ball.radius)) {
-				console.log('Ball clicked:', ball);
-				ball.vel.x += 500 * (Math.random() - 0.5);
-				ball.vel.y += 500 * (Math.random() - 0.5);
+			if (isPointInCircle(pos, ball.pos, ball.radius)) {
+				this.selectedBall = ball;
+				if (asClick) {
+					console.log('Ball clicked:', ball);
+				} else {
+					this.mouseDragStartPos = pos;
+					this.isMouseDragging = true;
+					console.log('Ball selected:', ball);
+				}
 			}
 		}
+	}
+	public handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>): void {
+		this.mouseDragCurPos = getRelativeMouseCoordinates(e, this.canvas);
+	}
+	public handleMouseUp(e: React.MouseEvent<HTMLCanvasElement>): void {
+		const pos = getRelativeMouseCoordinates(e, this.canvas);
+		if (!this.isMouseDragging) return;
+		console.debug('Mouse release at:', pos);
+		this.isMouseDragging = false;
+		let ball = this.selectedBall as PoolBall;
+		let mouseMoveVector = scaleVector(twoPointsToVector(
+			ball.pos, pos
+		), 2);
+		ball.vel = sumVectors(
+			ball.vel, mouseMoveVector
+		)
+		console.log('Mouse drag release vector:', mouseMoveVector)
 	}
 }
 

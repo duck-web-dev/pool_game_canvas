@@ -1,11 +1,39 @@
-import React, { useRef, useEffect, useCallback, useMemo } from 'react';
-import { PoolBallColorValues } from './lib/utils';
+import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import PoolGameEngine from './lib/engine';
+import styles from './css/popup.css';
+import './css/global.css';
 
 const App: React.FC = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const gameEngineRef = useRef<PoolGameEngine | null>(null);
-	
+
+	// Popup
+	const [isPopupShown, setIsPopupShown] = useState<boolean>(false);
+
+	// Handle canvas click
+	const canvasClickHandler = useCallback(
+		(e: React.MouseEvent<HTMLCanvasElement>) => {
+			let c = gameEngineRef.current?.handleMouseDown;
+			if (c) c.bind(gameEngineRef.current)(e, true);
+		},
+		[gameEngineRef.current]
+	)
+
+	// Handle canvas drag and release
+	const canvasMouseDownHandler = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+		let c = gameEngineRef.current?.handleMouseDown;
+		if (c) c.bind(gameEngineRef.current)(e, false);
+	}, [gameEngineRef.current])
+	const canvasMouseMoveHandler = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+		let c = gameEngineRef.current?.handleMouseMove;
+		if (c) c.bind(gameEngineRef.current)(e);
+	}, [gameEngineRef.current])
+	const canvasMouseUpHandler = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+		let c = gameEngineRef.current?.handleMouseUp;
+		if (c) c.bind(gameEngineRef.current)(e);
+	}, [gameEngineRef.current]);
+
+	// Init engine
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -25,19 +53,22 @@ const App: React.FC = () => {
 		};
 	}, [canvasRef.current]);
 
-	const canvasClickHandler = useCallback(
-		(e: React.MouseEvent<HTMLCanvasElement>) => {
-			console.debug('Canvas click handler', e);
-			let c = gameEngineRef.current?.handleClick;
-			if (c) c.bind(gameEngineRef.current)(e);
-		},
-		[gameEngineRef.current]
-	)
-
 	return (
 		<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: 'min-content', minWidth: 800}}>
 			<h1>Simple Billiards Demo</h1>
-			<canvas ref={canvasRef} width={800} height={600} onClick={canvasClickHandler}></canvas>
+			<div className="container" style={{width:800, height: 600}}>
+				<canvas 
+					ref={canvasRef}
+					width={800} height={600}
+					onClick={canvasClickHandler}
+					onMouseDown={canvasMouseDownHandler}
+					onMouseMove={canvasMouseMoveHandler}
+					onMouseUp={canvasMouseUpHandler}
+				></canvas>
+				{isPopupShown ? <div className={styles.popup}>{
+					
+				}</div> : <></>}
+			</div>
 		</div>
 	);
 };

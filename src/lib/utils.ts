@@ -19,3 +19,10 @@ export const PoolBallColorValues: Array<PoolBallColor>  = ['green', 'red', 'yell
 export function getRandomPoolBallColor(): PoolBallColor {
 	return PoolBallColorValues[Math.round(Math.random() * (PoolBallColorValues.length-1))];
 }
+
+export function getRelativeMouseCoordinates(e: React.MouseEvent, el: HTMLElement) {
+	const rect = el.getBoundingClientRect();
+	const x = e.clientX - rect.left;
+	const y = e.clientY - rect.top;
+	return { x, y };
+}
